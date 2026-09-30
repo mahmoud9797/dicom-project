@@ -1,0 +1,9 @@
+<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 64 64" role="img" aria-label="Skull">
+  <rect width="64" height="64" rx="15" fill="#0d1117"/>
+  <circle cx="32" cy="29" r="24" fill="#dff8fd" stroke="#0dcaf0" stroke-width="2"/>
+  <path d="M18 43v10c0 4 3 6 7 6h14c4 0 7-2 7-6V43" fill="#dff8fd" stroke="#0dcaf0" stroke-width="2"/>
+  <ellipse cx="23" cy="31" rx="7" ry="8" fill="#0d1117"/>
+  <ellipse cx="41" cy="31" rx="7" ry="8" fill="#0d1117"/>
+  <path d="m32 38-4 6h8z" fill="#0d1117"/>
+  <path d="M25 50h14M29 50v8m6-8v8" stroke="#0d1117" stroke-width="2" stroke-linecap="round"/>
+</svg>

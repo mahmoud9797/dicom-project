@@ -1,0 +1,16 @@
+__pycache__/
+*.py[cod]
+.pytest_cache/
+.venv/
+venv/
+.env
+.env.*
+.django_secret_key
+db.sqlite3*
+*.sqlite3
+media/
+extraction_output/
+*.rar
+*.zip
+patch.py
+patch_html.py

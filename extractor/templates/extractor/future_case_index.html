@@ -1,0 +1,91 @@
+{% extends 'extractor/base.html' %}
+{% block title %}Future Case Extractor{% endblock %}
+{% block nav_future_case %}active{% endblock %}
+
+{% block content %}
+<div class="row g-4">
+    <div class="col-lg-8">
+        <div class="card border-info mb-4">
+            <div class="card-body p-4">
+                <h1 class="h3 mb-2"><i class="bi bi-layers text-info me-2"></i>Future Case CBCT Recovery</h1>
+                <p class="text-secondary mb-0">Recover Future/Anatomage INV volumes from a direct .inv file, an .exe wrapper, or a ZIP archive. Export DICOM slices, NIfTI, previews, and a validation report.</p>
+            </div>
+        </div>
+        <div class="card">
+            <div class="card-header"><h2 class="h5 mb-0">New extraction</h2></div>
+            <div class="card-body">
+                <form method="post" enctype="multipart/form-data" id="future-case-form">
+                    {% csrf_token %}
+                    <div class="mb-3">
+                        <label for="{{ form.entered_patient_id.id_for_label }}" class="form-label">Patient ID</label>
+                        {{ form.entered_patient_id }}
+                        <div class="form-text">Required each time. Written to the recovered DICOM Patient ID tag. The patient name is read from the extracted DICOM after recovery.</div>
+                        <div class="text-danger small">{{ form.entered_patient_id.errors }}</div>
+                    </div>
+                    <div class="future-drop-zone mb-3" id="future-drop-zone" role="button" tabindex="0" aria-label="Choose or drop a Future Case file">
+                        <i class="bi bi-cloud-arrow-up display-4 text-info"></i>
+                        <div class="mt-2"><strong>Drop an .inv, .exe, or .zip file here</strong></div>
+                        <div class="text-secondary small">or click to choose a file</div>
+                        <div class="small mt-2" id="future-selected-file"></div>
+                    </div>
+                    <div class="mb-3">
+                        <label for="{{ form.source_file.id_for_label }}" class="form-label">Source file</label>
+                        {{ form.source_file }}
+                        <div class="text-danger small">{{ form.source_file.errors }}</div>
+                    </div>
+                    <div class="form-check mb-2">
+                        {{ form.reverse_z }}
+                        <label for="{{ form.reverse_z.id_for_label }}" class="form-check-label">Reverse slice order (Z)</label>
+                    </div>
+                    <div class="form-check mb-3">
+                        {{ form.create_zip_packages }}
+                        <label for="{{ form.create_zip_packages.id_for_label }}" class="form-check-label">Create DICOM and NIfTI ZIP packages</label>
+                    </div>
+                    <button type="submit" class="btn btn-info btn-lg w-100">Start recovery</button>
+                </form>
+            </div>
+        </div>
+    </div>
+    <div class="col-lg-4">
+        <div class="card">
+            <div class="card-header"><h2 class="h6 mb-0">Recent Future Case jobs</h2></div>
+            <div class="list-group list-group-flush">
+                {% for job in recent_jobs %}
+                <a class="list-group-item list-group-item-action d-flex justify-content-between" href="{% url 'future_case_job_detail' job.id %}">
+                    <span>{{ job.entered_patient_id|default:'—' }} · {{ job.patient_name|default:'—' }}</span><span class="badge bg-secondary">{{ job.status }}</span>
+                </a>
+                {% empty %}
+                <div class="p-3 text-secondary">No Future Case extractions yet.</div>
+                {% endfor %}
+            </div>
+        </div>
+    </div>
+</div>
+{% endblock %}
+
+{% block extra_js %}
+<script>
+(() => {
+    const zone = document.getElementById('future-drop-zone');
+    const input = document.getElementById('{{ form.source_file.id_for_label }}');
+    const label = document.getElementById('future-selected-file');
+    if (!zone || !input) return;
+    const showFile = () => { label.textContent = input.files.length ? input.files[0].name : ''; };
+    zone.addEventListener('click', () => input.click());
+    zone.addEventListener('keydown', e => { if (e.key === 'Enter' || e.key === ' ') { e.preventDefault(); input.click(); } });
+    zone.addEventListener('dragover', e => { e.preventDefault(); zone.classList.add('drag-over'); });
+    zone.addEventListener('dragleave', () => zone.classList.remove('drag-over'));
+    zone.addEventListener('drop', e => {
+        e.preventDefault();
+        zone.classList.remove('drag-over');
+        if (e.dataTransfer.files.length) {
+            const transfer = new DataTransfer();
+            transfer.items.add(e.dataTransfer.files[0]);
+            input.files = transfer.files;
+            showFile();
+        }
+    });
+    input.addEventListener('change', showFile);
+})();
+</script>
+{% endblock %}

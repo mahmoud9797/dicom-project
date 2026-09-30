@@ -1,0 +1,73 @@
+{% extends 'extractor/base.html' %}
+{% block title %}Future Case Job{% endblock %}
+{% block nav_future_case %}active{% endblock %}
+
+{% block content %}
+<div class="d-flex justify-content-between align-items-center mb-4">
+    <div><h1 class="h3 mb-1">Future Case recovery</h1><div class="text-secondary">{{ job.created_at }}</div></div>
+    <a href="{% url 'future_case_index' %}" class="btn btn-outline-info">New extraction</a>
+</div>
+<div class="row g-4">
+    <div class="col-lg-8">
+        <div class="card mb-4">
+            <div class="card-header d-flex justify-content-between"><h2 class="h5 mb-0">Status</h2><span class="badge bg-secondary" id="future-status">{{ job.status|upper }}</span></div>
+            <div class="card-body">
+                <div class="d-flex justify-content-between mb-2"><span id="future-message">{{ job.status_message }}</span><span id="future-percent">{{ job.progress_percent|floatformat:0 }}%</span></div>
+                <div class="progress"><div class="progress-bar bg-info" id="future-progress" style="width: {{ job.progress_percent }}%"></div></div>
+                <div class="text-danger mt-3" id="future-error">{{ job.error_message }}</div>
+            </div>
+        </div>
+        <div class="card mb-4 {% if job.status != 'completed' %}d-none{% endif %}" id="future-downloads">
+            <div class="card-header"><h2 class="h5 mb-0">Downloads</h2></div>
+            <div class="card-body d-flex flex-wrap gap-2">
+                {% if job.create_zip_packages %}
+                <a class="btn btn-info" href="{% url 'future_case_download' job.id 'dicom' %}">DICOM ZIP</a>
+                <a class="btn btn-outline-info" href="{% url 'future_case_download' job.id 'nifti-zip' %}">NIfTI and previews ZIP</a>
+                {% endif %}
+                <a class="btn btn-outline-info" href="{% url 'future_case_download' job.id 'nifti' %}">NIfTI file</a>
+                <a class="btn btn-outline-info" href="{% url 'future_case_download' job.id 'report' %}">Validation report</a>
+            </div>
+        </div>
+        <div class="card"><div class="card-header"><h2 class="h5 mb-0">Extraction log</h2></div><pre class="log-output mb-0 p-3" id="future-log">{{ job.log }}</pre></div>
+    </div>
+    <div class="col-lg-4">
+        <div class="card"><div class="card-header"><h2 class="h6 mb-0">Scan information</h2></div><div class="card-body">
+            <dl class="mb-0"><dt>Patient</dt><dd id="future-patient-name">{{ job.patient_name|default:'—' }}</dd><dt>Patient ID</dt><dd>{{ job.entered_patient_id|default:'—' }}</dd><dt>Matrix</dt><dd id="future-geometry">{{ job.geometry_display }}</dd><dt>Spacing</dt><dd id="future-spacing">{{ job.spacing_display }}</dd><dt>Source</dt><dd>{{ job.source_file.name }}</dd></dl>
+        </div></div>
+    </div>
+</div>
+{% endblock %}
+
+{% block extra_js %}
+{% if not job.is_complete %}
+<script>
+(() => {
+    const statusUrl = '{% url "future_case_status_api" job.id %}';
+    const poll = async () => {
+        try {
+            const response = await fetch(statusUrl, {cache: 'no-store'});
+            if (!response.ok) return;
+            const data = await response.json();
+            document.getElementById('future-status').textContent = data.status.toUpperCase();
+            document.getElementById('future-message').textContent = data.message;
+            document.getElementById('future-percent').textContent = Math.round(data.progress) + '%';
+            document.getElementById('future-progress').style.width = data.progress + '%';
+            document.getElementById('future-error').textContent = data.error_message;
+            document.getElementById('future-log').textContent = data.log;
+            document.getElementById('future-geometry').textContent = data.geometry;
+            document.getElementById('future-spacing').textContent = data.spacing;
+            document.getElementById('future-patient-name').textContent = data.patient_name || '—';
+            if (data.status === 'completed') {
+                clearInterval(timer);
+                window.location.assign('{% url "dicom_viewer" "future-case" job.id %}');
+                return;
+            }
+            if (data.is_complete) clearInterval(timer);
+        } catch (error) { console.error('Status check failed', error); }
+    };
+    const timer = setInterval(poll, 1500);
+    poll();
+})();
+</script>
+{% endif %}
+{% endblock %}

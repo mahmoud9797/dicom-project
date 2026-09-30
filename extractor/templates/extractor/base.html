@@ -1,0 +1,84 @@
+{% load static %}
+<!DOCTYPE html>
+<html lang="en" data-bs-theme="dark">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>{% block title %}CBCT Extractor{% endblock %} | DicomExtractor Pro</title>
+    <link rel="icon" type="image/svg+xml" href="{% static 'extractor/img/skull.svg' %}">
+    <link href="{% static 'extractor/vendor/bootstrap/bootstrap.min.css' %}" rel="stylesheet">
+    <link href="{% static 'extractor/vendor/bootstrap-icons/bootstrap-icons.css' %}" rel="stylesheet">
+    <link href="{% static 'extractor/css/style.css' %}" rel="stylesheet">
+    {% block extra_head %}{% endblock %}
+</head>
+<body>
+    <nav class="navbar navbar-expand-lg navbar-dark bg-dark border-bottom border-secondary">
+        <div class="container">
+            <a class="navbar-brand d-flex align-items-center" href="{% url 'index' %}">
+                <img src="{% static 'extractor/img/skull.svg' %}" alt="" width="30" height="30" class="me-2">
+                <span class="fw-bold">DicomExtractor</span>
+                <span class="badge bg-info text-dark ms-2 small">PRO</span>
+            </a>
+            <button class="navbar-toggler" type="button" data-bs-toggle="collapse" data-bs-target="#navbarNav">
+                <span class="navbar-toggler-icon"></span>
+            </button>
+            <div class="collapse navbar-collapse" id="navbarNav">
+                {% if user.is_authenticated %}
+                <ul class="navbar-nav ms-auto align-items-lg-center">
+                    <li class="nav-item"><a class="nav-link {% block nav_home %}{% endblock %}" href="{% url 'index' %}"><i class="bi bi-house-door me-1"></i>Home</a></li>
+                    <li class="nav-item"><a class="nav-link {% block nav_cdx %}{% endblock %}" href="{% url 'co_diagnostix_index' %}"><i class="bi bi-box me-1"></i>coDiagnostiX</a></li>
+                    <li class="nav-item"><a class="nav-link {% block nav_real_guide %}{% endblock %}" href="{% url 'real_guide_index' %}"><i class="bi bi-file-zip me-1"></i>RealGUIDE</a></li>
+                    <li class="nav-item"><a class="nav-link {% block nav_future_case %}{% endblock %}" href="{% url 'future_case_index' %}"><i class="bi bi-layers me-1"></i>Future Case</a></li>
+                    <li class="nav-item"><a class="nav-link {% block nav_viewer %}{% endblock %}" href="{% url 'viewer_list' %}"><i class="bi bi-image me-1"></i>Viewer</a></li>
+                    <li class="nav-item">
+                        <a class="nav-link {% block nav_jobs %}{% endblock %}" href="{% url 'job_list' %}">
+                            <i class="bi bi-list-task me-1"></i>All Jobs
+                        </a>
+                    </li>
+                    <li class="nav-item">
+                        <a class="nav-link {% block nav_about %}{% endblock %}" href="{% url 'about' %}">
+                            <i class="bi bi-info-circle me-1"></i>About
+                        </a>
+                    </li>
+                    {% if user.is_superuser %}
+                    <li class="nav-item"><a class="nav-link" href="{% url 'register_user' %}"><i class="bi bi-person-plus me-1"></i>New user</a></li>
+                    <li class="nav-item"><a class="nav-link" href="{% url 'recovery_codes' %}"><i class="bi bi-key me-1"></i>Recovery</a></li>
+                    {% endif %}
+                    <li class="nav-item ms-lg-3">
+                        <form method="post" action="{% url 'logout' %}">
+                            {% csrf_token %}
+                            <button type="submit" class="btn btn-outline-secondary btn-sm">Sign out</button>
+                        </form>
+                    </li>
+                </ul>
+                {% endif %}
+            </div>
+        </div>
+    </nav>
+
+    <main class="container py-4">
+        {% if messages %}
+        {% for message in messages %}
+        <div class="alert alert-{{ message.tags }} alert-dismissible fade show" role="alert">
+            {{ message }}
+            <button type="button" class="btn-close" data-bs-dismiss="alert"></button>
+        </div>
+        {% endfor %}
+        {% endif %}
+
+        {% block content %}{% endblock %}
+    </main>
+
+    <footer class="bg-dark border-top border-secondary py-3 mt-auto">
+        <div class="container text-center text-secondary small">
+            <p class="mb-1">DicomExtractor Pro &mdash; coDiagnostiX, RealGUIDE and Future Case</p>
+            <p class="mb-0">LAN-accessible medical imaging tool. Uploaded cases and results are stored on the main PC.</p>
+        </div>
+    </footer>
+
+    <script src="{% static 'extractor/vendor/bootstrap/bootstrap.bundle.min.js' %}"></script>
+    <script src="{% static 'extractor/js/app.js' %}"></script>
+    <script src="{% static 'extractor/js/password-toggle.js' %}"></script>
+    {% block extra_js %}{% endblock %}
+</body>
+</html>

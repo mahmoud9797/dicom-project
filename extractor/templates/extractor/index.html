@@ -1,0 +1,171 @@
+{% extends 'extractor/base.html' %}
+{% load static %}
+
+{% block title %}coDiagnostiX Extractor{% endblock %}
+{% block nav_cdx %}active{% endblock %}
+
+{% block content %}
+<div class="row">
+    <div class="col-lg-8">
+        <!-- Hero Section -->
+        <div class="card bg-gradient-primary mb-4 border-info">
+            <div class="card-body p-4">
+                <h1 class="h3 mb-2">
+                    <i class="bi bi-lungs-fill text-info me-2"></i>
+                    CBCT Multi-Slice Extractor
+                </h1>
+                <p class="text-secondary mb-0">
+                    Rebuild native CBCT cache volumes as classic multi-slice DICOM series.
+                    Upload your <code>.cdxPatient</code> + <code>.cache</code> files to begin.
+                </p>
+            </div>
+        </div>
+
+        <!-- Upload Card -->
+        <div class="card mb-4">
+            <div class="card-header">
+                <h5 class="mb-0"><i class="bi bi-cloud-arrow-up me-2"></i>New Extraction</h5>
+            </div>
+            <div class="card-body">
+                <form method="post" enctype="multipart/form-data" id="upload-form">
+                    {% csrf_token %}
+                    <div class="mb-3">
+                        <label for="{{ form.entered_patient_id.id_for_label }}" class="form-label">Patient ID</label>
+                        {{ form.entered_patient_id }}
+                        <div class="form-text">Required for this extraction and written to the DICOM Patient ID tag. The patient name is read from the extracted DICOM after processing.</div>
+                        <div class="text-danger small">{{ form.entered_patient_id.errors }}</div>
+                    </div>
+
+                    <!-- Drop Zone -->
+                    <div class="drop-zone mb-4" id="drop-zone">
+                        <div class="drop-zone-content">
+                            <i class="bi bi-cloud-arrow-up display-3 text-info"></i>
+                            <h5 class="mt-3 mb-1">Drag & Drop Files Here</h5>
+                            <p class="text-secondary mb-3">
+                                Drop your <strong>.cdxPatient</strong> and <strong>.cache</strong> files,
+                                or use the fields below
+                            </p>
+                            <div class="drop-zone-files" id="drop-zone-files"></div>
+                        </div>
+                    </div>
+
+                    <!-- File Inputs -->
+                    <div class="row g-3 mb-3">
+                        <div class="col-md-6">
+                            <label for="cdx-file-input" class="form-label">
+                                <i class="bi bi-database me-1"></i>Patient Database (.cdxPatient)
+                            </label>
+                            {{ form.cdx_file }}
+                            {% if form.cdx_file.errors %}
+                            <div class="text-danger small mt-1">{{ form.cdx_file.errors.0 }}</div>
+                            {% endif %}
+                        </div>
+                        <div class="col-md-6">
+                            <label for="cache-file-input" class="form-label">
+                                <i class="bi bi-file-binary me-1"></i>Cache File (.cache)
+                            </label>
+                            {{ form.cache_file }}
+                            {% if form.cache_file.errors %}
+                            <div class="text-danger small mt-1">{{ form.cache_file.errors.0 }}</div>
+                            {% endif %}
+                        </div>
+                    </div>
+
+                    <!-- Options -->
+                    <div class="card bg-body-tertiary mb-3">
+                        <div class="card-body py-3">
+                            <h6 class="card-title mb-3">
+                                <i class="bi bi-gear me-1"></i>Extraction Options
+                            </h6>
+                            <div class="form-check form-switch">
+                                {{ form.fix_left_right }}
+                                <label class="form-check-label" for="fix-lr-check">
+                                    <strong>Fix Left/Right Mirror</strong>
+                                    <span class="badge bg-success ms-1">Recommended</span>
+                                </label>
+                                <div class="form-text">
+                                    Reverses columns in every slice to correct horizontal mirror.
+                                    Pixel intensities are preserved — only pixel order changes.
+                                </div>
+                            </div>
+                        </div>
+                    </div>
+
+                    <!-- Submit -->
+                    <button type="submit" class="btn btn-info btn-lg w-100" id="submit-btn">
+                        <i class="bi bi-play-fill me-2"></i>Start Extraction
+                    </button>
+                </form>
+            </div>
+        </div>
+    </div>
+
+    <div class="col-lg-4">
+        <!-- Quick Info -->
+        <div class="card mb-4">
+            <div class="card-header">
+                <h6 class="mb-0"><i class="bi bi-lightning-charge me-1"></i>Quick Info</h6>
+            </div>
+            <div class="card-body">
+                <ul class="list-unstyled mb-0">
+                    <li class="mb-2">
+                        <i class="bi bi-check-circle text-success me-2"></i>
+                        No resampling or interpolation
+                    </li>
+                    <li class="mb-2">
+                        <i class="bi bi-check-circle text-success me-2"></i>
+                        Exact native voxel values preserved
+                    </li>
+                    <li class="mb-2">
+                        <i class="bi bi-check-circle text-success me-2"></i>
+                        Full validation of every output slice
+                    </li>
+                    <li class="mb-2">
+                        <i class="bi bi-check-circle text-success me-2"></i>
+                        ZIP download with validation report
+                    </li>
+                    <li class="mb-0">
+                        <i class="bi bi-shield-check text-info me-2"></i>
+                        All processing stays on your LAN
+                    </li>
+                </ul>
+            </div>
+        </div>
+
+        <!-- Recent Jobs -->
+        <div class="card">
+            <div class="card-header d-flex justify-content-between align-items-center">
+                <h6 class="mb-0"><i class="bi bi-clock-history me-1"></i>Recent Jobs</h6>
+                <a href="{% url 'job_list' %}" class="btn btn-sm btn-outline-secondary">View All</a>
+            </div>
+            <div class="card-body p-0">
+                {% if recent_jobs %}
+                <div class="list-group list-group-flush">
+                    {% for job in recent_jobs %}
+                    <a href="{% url 'job_detail' job.id %}" class="list-group-item list-group-item-action">
+                        <div class="d-flex justify-content-between align-items-center">
+                            <div>
+                                <span class="badge
+                                    {% if job.status == 'completed' %}bg-success
+                                    {% elif job.status == 'processing' %}bg-warning text-dark
+                                    {% elif job.status == 'failed' %}bg-danger
+                                    {% else %}bg-secondary{% endif %}
+                                    me-2">{{ job.status }}</span>
+                                <small class="text-truncate">{{ job.entered_patient_id|default:'—' }} · {{ job.patient_name|default:'—' }}</small>
+                            </div>
+                            <small class="text-secondary">{{ job.created_at|timesince }} ago</small>
+                        </div>
+                    </a>
+                    {% endfor %}
+                </div>
+                {% else %}
+                <div class="text-center text-secondary py-4">
+                    <i class="bi bi-inbox display-6"></i>
+                    <p class="mt-2 mb-0">No extractions yet</p>
+                </div>
+                {% endif %}
+            </div>
+        </div>
+    </div>
+</div>
+{% endblock %}

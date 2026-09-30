@@ -1,0 +1,221 @@
+/* ==========================================================================
+   DicomExtractor Pro - Custom Styles
+   ========================================================================== */
+
+/* Root Variables */
+:root {
+    --brand-primary: #0dcaf0;
+    --brand-dark: #1a1d23;
+    --brand-surface: #212529;
+}
+
+/* Body */
+body {
+    min-height: 100vh;
+    display: flex;
+    flex-direction: column;
+    background-color: var(--brand-dark);
+}
+
+main {
+    flex: 1;
+}
+
+/* Navbar */
+.navbar-brand {
+    font-size: 1.3rem;
+    letter-spacing: 0.5px;
+}
+
+.navbar-nav .nav-link.active {
+    color: var(--brand-primary);
+    font-weight: 600;
+}
+
+.extractor-choice {
+    color: inherit;
+    border: 1px solid rgba(13, 202, 240, 0.25);
+    transition: transform .2s ease, border-color .2s ease, box-shadow .2s ease;
+}
+
+.extractor-choice:hover,
+.extractor-choice:focus-visible {
+    transform: translateY(-4px);
+    border-color: var(--brand-primary);
+    box-shadow: 0 10px 30px rgba(0, 0, 0, .2);
+}
+
+.future-drop-zone {
+    border: 2px dashed rgba(13, 202, 240, 0.45);
+    border-radius: 12px;
+    background: rgba(13, 202, 240, 0.05);
+    padding: 2rem 1rem;
+    text-align: center;
+    cursor: pointer;
+    transition: background .2s ease, border-color .2s ease;
+}
+
+.future-drop-zone:hover,
+.future-drop-zone:focus,
+.future-drop-zone.drag-over {
+    border-color: var(--brand-primary);
+    background: rgba(13, 202, 240, 0.12);
+    outline: none;
+}
+
+/* Cards */
+.card {
+    border-color: rgba(255, 255, 255, 0.1);
+    background-color: var(--brand-surface);
+}
+
+.card-header {
+    background-color: rgba(0, 0, 0, 0.2);
+    border-bottom-color: rgba(255, 255, 255, 0.1);
+}
+
+/* Drop Zone */
+.drop-zone {
+    border: 3px dashed rgba(13, 202, 240, 0.3);
+    border-radius: 12px;
+    padding: 3rem 2rem;
+    text-align: center;
+    transition: all 0.3s ease;
+    cursor: pointer;
+    background: rgba(13, 202, 240, 0.03);
+}
+
+.drop-zone:hover,
+.drop-zone.drag-over {
+    border-color: var(--brand-primary);
+    background: rgba(13, 202, 240, 0.08);
+    transform: scale(1.01);
+}
+
+.drop-zone.drag-over {
+    box-shadow: 0 0 30px rgba(13, 202, 240, 0.15);
+}
+
+.drop-zone-files .file-badge {
+    display: inline-block;
+    background: rgba(13, 202, 240, 0.15);
+    color: var(--brand-primary);
+    border: 1px solid rgba(13, 202, 240, 0.3);
+    border-radius: 6px;
+    padding: 4px 12px;
+    margin: 4px;
+    font-size: 0.85rem;
+}
+
+/* Progress Bar */
+.progress {
+    background-color: rgba(255, 255, 255, 0.1);
+    border-radius: 8px;
+}
+
+.progress-bar {
+    border-radius: 8px;
+    font-weight: 600;
+    font-size: 0.85rem;
+}
+
+/* Log Output */
+.log-output {
+    background-color: #0d1117;
+    color: #c9d1d9;
+    font-family: 'Cascadia Code', 'Fira Code', 'Consolas', monospace;
+    font-size: 0.8rem;
+    line-height: 1.6;
+    max-height: 400px;
+    overflow-y: auto;
+    white-space: pre-wrap;
+    word-wrap: break-word;
+    border-radius: 0;
+}
+
+/* Table Styles */
+.table {
+    --bs-table-bg: transparent;
+}
+
+.table-hover tbody tr:hover {
+    background-color: rgba(13, 202, 240, 0.05);
+}
+
+/* Badges */
+.badge {
+    font-weight: 500;
+    letter-spacing: 0.3px;
+}
+
+/* Form Improvements */
+.form-control,
+.form-select {
+    background-color: rgba(0, 0, 0, 0.3);
+    border-color: rgba(255, 255, 255, 0.15);
+}
+
+.form-control:focus,
+.form-select:focus {
+    background-color: rgba(0, 0, 0, 0.4);
+    border-color: var(--brand-primary);
+    box-shadow: 0 0 0 0.2rem rgba(13, 202, 240, 0.15);
+}
+
+/* Gradient Header */
+.bg-gradient-primary {
+    background: linear-gradient(135deg, rgba(13, 202, 240, 0.08), rgba(13, 202, 240, 0.02));
+}
+
+/* Alert Customization */
+.alert-info {
+    background-color: rgba(13, 202, 240, 0.1);
+    border-color: rgba(13, 202, 240, 0.2);
+    color: #b8e9f5;
+}
+
+/* Scrollbar Styling */
+.log-output::-webkit-scrollbar {
+    width: 8px;
+}
+
+.log-output::-webkit-scrollbar-track {
+    background: #0d1117;
+}
+
+.log-output::-webkit-scrollbar-thumb {
+    background: #30363d;
+    border-radius: 4px;
+}
+
+.log-output::-webkit-scrollbar-thumb:hover {
+    background: #484f58;
+}
+
+/* Responsive */
+@media (max-width: 768px) {
+    .drop-zone {
+        padding: 2rem 1rem;
+    }
+
+    .drop-zone i.display-3 {
+        font-size: 2.5rem !important;
+    }
+}
+
+/* Loading Spinner */
+.spinner-border-sm {
+    width: 1rem;
+    height: 1rem;
+    border-width: 0.15em;
+}
+
+/* Status Card Animation */
+@keyframes pulse-border {
+    0%, 100% { border-color: rgba(13, 202, 240, 0.3); }
+    50% { border-color: rgba(13, 202, 240, 0.6); }
+}
+
+.card.processing {
+    animation: pulse-border 2s infinite;
+}

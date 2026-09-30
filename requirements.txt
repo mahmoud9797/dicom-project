@@ -1,0 +1,9 @@
+django>=4.2,<5.0; python_version < '3.10'
+django>=5.0,<6.0; python_version >= '3.10'
+numpy
+pydicom
+nibabel
+pillow
+imagecodecs
+scipy
+scikit-image

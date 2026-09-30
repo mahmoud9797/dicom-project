@@ -1,0 +1,48 @@
+{% extends 'extractor/base.html' %}
+{% block title %}About{% endblock %}
+{% block nav_about %}active{% endblock %}
+
+{% block content %}
+<div class="text-center mb-5">
+    <h1>About DicomExtractor Pro</h1>
+    <p class="lead text-secondary">Three CBCT extraction workflows in one LAN application.</p>
+</div>
+
+<div class="row g-4 mb-4">
+    <div class="col-md-4">
+        <div class="card h-100"><div class="card-body p-4 d-flex flex-column">
+            <h2 class="h4"><i class="bi bi-box text-info me-2"></i>coDiagnostiX</h2>
+            <p class="text-secondary">Upload a matching <code>.cdxPatient</code> database and <code>.cache</code> file. The extractor writes classic DICOM slices, a ZIP package, and a validation report. A per-job option can reverse the left/right pixel order.</p>
+            <a href="{% url 'co_diagnostix_index' %}" class="btn btn-outline-info mt-auto">Open coDiagnostiX</a>
+        </div></div>
+    </div>
+    <div class="col-md-4">
+        <div class="card h-100"><div class="card-body p-4 d-flex flex-column">
+            <h2 class="h4"><i class="bi bi-file-zip text-info me-2"></i>RealGUIDE</h2>
+            <p class="text-secondary">Upload a supported RealGUIDE raw-project ZIP. The extractor writes DICOM slices, a ZIP package, and a validation report. Its axial orientation is assumed and must be verified before clinical use.</p>
+            <a href="{% url 'real_guide_index' %}" class="btn btn-outline-info mt-auto">Open RealGUIDE</a>
+        </div></div>
+    </div>
+    <div class="col-md-4">
+        <div class="card h-100"><div class="card-body p-4 d-flex flex-column">
+            <h2 class="h4"><i class="bi bi-layers text-info me-2"></i>Future Case</h2>
+            <p class="text-secondary">Upload a Future/Anatomage <code>.inv</code>, an <code>.exe</code> wrapper, or a ZIP containing one. Recovery produces DICOM, NIfTI, previews, and a validation report. ZIP packaging and Z-order reversal are optional.</p>
+            <a href="{% url 'future_case_index' %}" class="btn btn-outline-info mt-auto">Open Future Case</a>
+        </div></div>
+    </div>
+</div>
+
+<div class="card mb-4"><div class="card-body p-4">
+    <h2 class="h5">Starting a new extraction</h2>
+    <p class="mb-0">Choose an extractor from the home page, enter a patient ID, and upload the required source file or files. After extraction, the job reads the patient name from the Patient Name tag (0010,0010) in its resulting DICOM series. If the tag is empty, no name is shown. The job page shows progress, validation status, and available downloads.</p>
+    <p class="mt-3 mb-0">Completed jobs open in the DICOM viewer automatically. The Viewer link in the top bar lists completed scans. Each scan has axial, coronal, sagittal, and threshold-derived 3D views, with STL export, key patient and date fields, grayscale controls, zoom, and pan.</p>
+</div></div>
+
+<div class="card"><div class="card-body p-4">
+    <h2 class="h5">Access on the local network</h2>
+    <p>Sign in before uploading cases or viewing jobs and results. The administrator can create new users from the <strong>New user</strong> link; each account needs a <code>@3ddx.com</code> email address. Use <strong>Forgot password?</strong> on the sign-in page to request a one-time recovery code. Until email delivery is configured, the administrator can find active codes under <strong>Recovery</strong> and provide them to the account owner. Sign out when finished on a shared workstation.</p>
+    <p>Run <code>start_server.bat</code> on the PC hosting the project. Open <a href="http://localhost:8000/">http://localhost:8000/</a> on that PC. Other devices can use <code>http://&lt;server IPv4 address&gt;:8000/</code> with an address shown by the launcher, if they can reach the PC over the LAN or VPN.</p>
+    <p>Each copy stores its own uploaded cases, results, and job history. Use one server address for everyone if you need a single shared job history.</p>
+    <p class="mb-0 text-secondary">If other PCs cannot connect, an administrator must allow inbound TCP port 8000 on the host PC. The project includes <code>enable_lan_firewall.ps1</code> for this setup.</p>
+</div></div>
+{% endblock %}

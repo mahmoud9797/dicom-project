@@ -1,0 +1,20 @@
+{% extends 'extractor/base.html' %}
+{% block title %}Recovery codes{% endblock %}
+{% block content %}
+<div class="d-flex flex-wrap justify-content-between gap-3 mb-4">
+    <div><h1 class="h3 mb-1">Pending recovery codes</h1>
+        <p class="text-secondary mb-0">Give codes only to the verified account owner. Each code expires after 10 minutes and can be used once.</p></div>
+    <a href="{% url 'register_user' %}" class="btn btn-outline-info">New user</a>
+</div>
+{% if codes %}
+<div class="card"><div class="table-responsive"><table class="table table-hover mb-0">
+    <thead><tr><th>Username</th><th>Company email</th><th>Code</th><th>Expires</th><th>Delivery</th></tr></thead>
+    <tbody>{% for code in codes %}
+    <tr><td>{{ code.user.username }}</td><td>{{ code.user.email|default:'—' }}</td>
+        <td><code class="fs-5 user-select-all">{{ code.code }}</code></td>
+        <td>{{ code.expires_at|date:'Y-m-d H:i:s' }} UTC</td>
+        <td>{% if code.delivered_by_email %}Email sent{% else %}Give to user manually{% endif %}</td></tr>
+    {% endfor %}</tbody>
+</table></div></div>
+{% else %}<div class="card"><div class="card-body text-secondary">No active recovery requests.</div></div>{% endif %}
+{% endblock %}

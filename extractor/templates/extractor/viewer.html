@@ -1,0 +1,168 @@
+{% extends 'extractor/base.html' %}
+{% load static %}
+{% block title %}DICOM viewer{% endblock %}
+{% block nav_viewer %}active{% endblock %}
+{% block extra_head %}<link rel="stylesheet" href="{% static 'extractor/css/viewer.css' %}?v=9">{% endblock %}
+
+{% block content %}
+<div class="d-flex flex-wrap justify-content-between align-items-start gap-3 mb-3">
+    <div>
+        <div class="text-info text-uppercase small fw-bold">{{ extractor_label }} · Completed scan</div>
+        <h1 class="h3 mb-1">DICOM viewer</h1>
+        <div class="text-secondary small">{{ job.id }}</div>
+    </div>
+    <div class="d-flex flex-wrap gap-2">
+        <a href="{{ detail_url }}" class="btn btn-outline-secondary">Extraction details</a>
+        {% if kind == 'co-diagnostix' %}
+        <a href="{% url 'download_zip' job.id %}" class="btn btn-info">Download DICOM ZIP</a>
+        {% elif kind == 'real-guide' %}
+        <a href="{% url 'rg_download_zip' job.id %}" class="btn btn-info">Download DICOM ZIP</a>
+        {% elif kind == 'future-case' and job.create_zip_packages %}
+        <a href="{% url 'future_case_download' job.id 'dicom' %}" class="btn btn-info">Download DICOM ZIP</a>
+        {% endif %}
+    </div>
+</div>
+
+<div class="viewer-top-metadata mb-3" aria-label="Top DICOM metadata">
+    {% for label, value in summary %}
+    <div class="card"><div class="card-body py-2 px-3">
+        <div class="small text-secondary">{{ label }}</div>
+        <div class="fw-semibold text-break">{{ value }}</div>
+    </div></div>
+    {% endfor %}
+</div>
+
+<div class="viewer-layout">
+    <aside class="viewer-sidebar" aria-label="Viewer adjustments">
+        <section class="card viewer-sidebar-card" aria-label="3D reconstruction adjustments">
+            <div class="card-header"><h2 class="h6 mb-0">3D reconstruction</h2></div>
+            <div class="card-body">
+                <label class="form-label small" for="threshold-preset">Tissue preset</label>
+                <select class="form-select form-select-sm mb-3" id="threshold-preset">
+                    <option value="maxillofacial" {% if kind == 'real-guide' %}selected{% endif %}>Maxillofacial bone</option>
+                    <option value="bone" {% if kind != 'real-guide' %}selected{% endif %}>Bone</option>
+                    <option value="dental">Dental</option>
+                    <option value="air">Air</option>
+                    <option value="soft">Soft tissue</option>
+                    <option value="custom">Custom</option>
+                </select>
+                <div class="row g-2 mb-3">
+                    <div class="col-6">
+                        <label class="form-label small" for="threshold-min">Minimum</label>
+                        <input id="threshold-min" type="number" step="1" value="300" class="form-control form-control-sm">
+                    </div>
+                    <div class="col-6">
+                        <label class="form-label small" for="threshold-max">Maximum</label>
+                        <input id="threshold-max" type="number" step="1" value="3000" class="form-control form-control-sm">
+                    </div>
+                </div>
+                <label class="form-label small" for="surface-smoothing">Surface smoothing</label>
+                <select id="surface-smoothing" class="form-select form-select-sm mb-3">
+                    <option value="0">Off</option>
+                    <option value="0.5">Light</option>
+                    <option value="0.8" selected>Smooth</option>
+                    <option value="1.2">Extra smooth</option>
+                </select>
+                <div class="d-grid gap-2">
+                    <button type="button" class="btn btn-sm btn-info" id="apply-threshold">Calculate mask &amp; show 3D</button>
+                    <p class="small mb-0 text-secondary" id="mask-summary" role="status" aria-live="polite"></p>
+                    <button type="button" class="btn btn-sm btn-outline-secondary" id="export-mask" disabled>Export binary mask (NRRD)</button>
+                    <button type="button" class="btn btn-sm btn-outline-info" id="export-stl" disabled>Export STL</button>
+                    <button type="button" class="btn btn-sm btn-outline-info" id="export-obj" disabled>Export OBJ</button>
+                </div>
+                <div class="form-check mt-3">
+                    <input class="form-check-input" type="checkbox" id="show-mask-overlay" checked>
+                    <label class="form-check-label small" for="show-mask-overlay"><span class="viewer-mask-swatch"></span>Colored mask on CT</label>
+                </div>
+                <label class="form-label small mt-2" for="mask-opacity">Mask opacity <span id="mask-opacity-value">45%</span></label>
+                <input id="mask-opacity" type="range" class="form-range" min="10" max="90" value="45">
+                <p class="small text-secondary mt-3 mb-0">The full-resolution binary mask uses the selected threshold. Smoothing changes only the 3D mesh. STL and OBJ coordinates use the recorded millimetre spacing; neither format encodes units.</p>
+                {% if viewer_config.rescaleType != 'HU' %}<p class="small text-warning mt-2 mb-0">This scan is not marked as Hounsfield units. Bone is a visual estimate; adjust the threshold and verify anatomy and orientation before clinical use.</p>{% endif %}
+            </div>
+        </section>
+
+        <section class="card viewer-sidebar-card" aria-label="Gray scale adjustments">
+            <div class="card-header"><h2 class="h6 mb-0">Gray scale</h2></div>
+            <div class="card-body">
+                <div class="row g-2 mb-3">
+                    <div class="col-6">
+                        <label class="form-label small" for="window-center">Level</label>
+                        <input id="window-center" type="number" step="1" class="form-control form-control-sm">
+                    </div>
+                    <div class="col-6">
+                        <label class="form-label small" for="window-width">Width</label>
+                        <input id="window-width" type="number" min="1" step="1" class="form-control form-control-sm">
+                    </div>
+                </div>
+                <label class="form-label small" for="gray-brightness">Brightness <span id="brightness-value">0</span></label>
+                <input id="gray-brightness" type="range" class="form-range mb-3" min="-100" max="100" value="0">
+                <label class="form-label small" for="gray-contrast">Contrast <span id="contrast-value">100%</span></label>
+                <input id="gray-contrast" type="range" class="form-range mb-3" min="25" max="200" value="100">
+                <div class="d-flex gap-2">
+                    <button type="button" class="btn btn-sm btn-outline-info flex-fill" id="auto-window">Auto gray</button>
+                    <button type="button" class="btn btn-sm btn-outline-secondary flex-fill" id="invert-view">Invert</button>
+                </div>
+            </div>
+        </section>
+
+    </aside>
+
+    <div class="viewer-workspace">
+    <div class="viewer-locator-bar mb-2" aria-label="CT locator">
+        <span><span class="viewer-locator-swatch" aria-hidden="true">＋</span> Shift + left click on a CT image to place the locator</span>
+        <span id="locator-coordinates" class="viewer-locator-coordinates" role="status" aria-live="polite">No locator</span>
+        <button type="button" id="clear-locator" class="btn btn-sm btn-outline-secondary" disabled>Clear locator</button>
+    </div>
+    <div class="viewer-grid" id="viewer-grid">
+    {% for plane, label in plane_labels %}
+    <section class="card viewer-panel" data-view="{{ plane }}" aria-label="{{ label }} view">
+        <div class="card-header viewer-panel-header">
+            <h2 class="h6 mb-0">{{ label }}</h2>
+            <div class="viewer-panel-actions">
+                <span class="small text-secondary" data-position></span>
+                <button type="button" class="viewer-panel-button" data-action="minimize" aria-label="Minimize {{ label }}" title="Minimize">−</button>
+                <button type="button" class="viewer-panel-button" data-action="maximize" aria-label="Maximize {{ label }}" title="Maximize">□</button>
+            </div>
+        </div>
+        <div class="viewer-panel-body">
+            <div class="viewer-stage" data-stage tabindex="0" aria-label="{{ label }} image; mouse wheel or arrow keys change slices; Shift plus left click sets locator">
+                <canvas data-canvas aria-label="{{ label }} DICOM image"></canvas>
+                <div class="viewer-message" data-message role="alert"></div>
+            </div>
+            <div class="viewer-panel-footer">
+                <label class="visually-hidden" for="range-{{ plane }}">{{ label }} slice</label>
+                <input id="range-{{ plane }}" data-range type="range" class="form-range" min="1" max="1" value="1">
+                <span data-count class="small text-nowrap"></span>
+                <button type="button" class="btn btn-sm btn-outline-secondary" data-action="reset">Reset</button>
+            </div>
+        </div>
+    </section>
+    {% if plane == 'axial' %}
+    <section class="card viewer-panel" data-view="surface" aria-label="3D binary mask surface">
+        <div class="card-header viewer-panel-header">
+            <h2 class="h6 mb-0">3D mask surface</h2>
+            <div class="viewer-panel-actions">
+                <button type="button" class="viewer-panel-button" data-action="minimize" aria-label="Minimize 3D" title="Minimize">−</button>
+                <button type="button" class="viewer-panel-button" data-action="maximize" aria-label="Maximize 3D" title="Maximize">□</button>
+            </div>
+        </div>
+        <div class="viewer-panel-body">
+            <div class="viewer-stage viewer-stage-3d" data-stage aria-label="Drag to rotate 3D surface; wheel to zoom">
+                <canvas data-canvas aria-label="Binary-mask-derived 3D surface"></canvas>
+                <div class="viewer-message" data-message role="alert"></div>
+            </div>
+            <div class="viewer-panel-footer justify-content-between">
+                <span class="small text-secondary">Drag: rotate · Wheel: zoom</span>
+                <button type="button" class="btn btn-sm btn-outline-secondary" data-action="reset">Reset</button>
+            </div>
+        </div>
+    </section>
+    {% endif %}
+    {% endfor %}
+</div>
+
+    </div>
+</div>
+{{ viewer_config|json_script:"viewer-config" }}
+{% endblock %}
+{% block extra_js %}<script src="{% static 'extractor/js/viewer.js' %}?v=9"></script>{% endblock %}

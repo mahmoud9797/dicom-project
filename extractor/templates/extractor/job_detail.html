@@ -1,0 +1,209 @@
+{% extends 'extractor/base.html' %}
+{% load static %}
+
+{% block title %}Job {{ job.id|truncatechars:12 }}{% endblock %}
+
+{% block content %}
+<div class="d-flex justify-content-between align-items-center mb-4">
+    <div>
+        <h2 class="mb-1">
+            <i class="bi bi-activity me-2"></i>Extraction Job
+        </h2>
+        <p class="text-secondary mb-0">
+            <small>ID: {{ job.id }} &bull; Created {{ job.created_at|timesince }} ago</small>
+        </p>
+    </div>
+    <div>
+        <a href="{% url 'co_diagnostix_index' %}" class="btn btn-outline-secondary me-2">
+            <i class="bi bi-plus-lg me-1"></i>New
+        </a>
+        <a href="{% url 'job_list' %}" class="btn btn-outline-secondary">
+            <i class="bi bi-list me-1"></i>All Jobs
+        </a>
+    </div>
+</div>
+
+<div class="row">
+    <div class="col-lg-8">
+        <!-- Status Card -->
+        <div class="card mb-4" id="status-card">
+            <div class="card-header d-flex justify-content-between align-items-center">
+                <h5 class="mb-0"><i class="bi bi-speedometer2 me-2"></i>Status</h5>
+                <span class="badge fs-6
+                    {% if job.status == 'completed' %}bg-success
+                    {% elif job.status == 'processing' %}bg-warning text-dark
+                    {% elif job.status == 'failed' %}bg-danger
+                    {% else %}bg-secondary{% endif %}"
+                    id="status-badge">{{ job.status|upper }}</span>
+            </div>
+            <div class="card-body">
+                <div class="mb-3">
+                    <div class="d-flex justify-content-between mb-1">
+                        <span id="status-message">{{ job.status_message }}</span>
+                        <span id="progress-text">{{ job.progress_percent|floatformat:0 }}%</span>
+                    </div>
+                    <div class="progress" style="height: 24px;">
+                        <div class="progress-bar progress-bar-striped
+                            {% if job.status == 'processing' %}progress-bar-animated bg-info
+                            {% elif job.status == 'completed' %}bg-success
+                            {% elif job.status == 'failed' %}bg-danger
+                            {% else %}bg-secondary{% endif %}"
+                            role="progressbar"
+                            style="width: {{ job.progress_percent }}%;"
+                            id="progress-bar"
+                            aria-valuenow="{{ job.progress_percent }}"
+                            aria-valuemin="0"
+                            aria-valuemax="100">
+                        </div>
+                    </div>
+                </div>
+
+                {% if job.status == 'failed' %}
+                <div class="alert alert-danger" id="error-alert">
+                    <i class="bi bi-exclamation-triangle me-2"></i>
+                    <strong>Error:</strong> <span id="error-message">{{ job.error_message }}</span>
+                </div>
+                {% endif %}
+
+                {% if job.status == 'completed' %}
+                <div class="alert alert-success" id="success-alert">
+                    <i class="bi bi-check-circle me-2"></i>
+                    <strong>All {{ job.matrix_slices }} slices extracted and validated successfully.</strong>
+                </div>
+                {% endif %}
+            </div>
+        </div>
+
+        <!-- Downloads Card (only when completed) -->
+        <div class="card mb-4 {% if job.status != 'completed' %}d-none{% endif %}" id="downloads-card">
+            <div class="card-header">
+                <h5 class="mb-0"><i class="bi bi-download me-2"></i>Downloads</h5>
+            </div>
+            <div class="card-body">
+                <div class="row g-3">
+                    <div class="col-md-6">
+                        <a href="{% url 'download_zip' job.id %}" class="btn btn-info btn-lg w-100" id="download-zip-btn">
+                            <i class="bi bi-file-zip me-2"></i>Download DICOM ZIP
+                        </a>
+                        <small class="text-secondary d-block mt-1" id="zip-filename">{{ job.zip_filename }}</small>
+                    </div>
+                    <div class="col-md-6">
+                        <a href="{% url 'download_report' job.id %}" class="btn btn-outline-info btn-lg w-100" id="download-report-btn">
+                            <i class="bi bi-file-text me-2"></i>Validation Report
+                        </a>
+                        <small class="text-secondary d-block mt-1" id="report-filename">{{ job.report_filename }}</small>
+                    </div>
+                </div>
+            </div>
+        </div>
+
+        <!-- Log Card -->
+        <div class="card mb-4">
+            <div class="card-header">
+                <h5 class="mb-0"><i class="bi bi-terminal me-2"></i>Extraction Log</h5>
+            </div>
+            <div class="card-body p-0">
+                <pre class="log-output mb-0 p-3" id="log-output">{{ job.log|default:"Waiting for output..." }}</pre>
+            </div>
+        </div>
+    </div>
+
+    <div class="col-lg-4">
+        <!-- Scan Info Card -->
+        <div class="card mb-4">
+            <div class="card-header">
+                <h6 class="mb-0"><i class="bi bi-info-circle me-2"></i>Scan Information</h6>
+            </div>
+            <div class="card-body">
+                <table class="table table-sm table-borderless mb-0">
+                    <tr><td class="text-secondary">Patient</td><td id="info-patient-name">{{ job.patient_name|default:'—' }}</td></tr>
+                    <tr><td class="text-secondary">Patient ID</td><td>{{ job.entered_patient_id|default:'—' }}</td></tr>
+                    <tr>
+                        <td class="text-secondary">Scan ID</td>
+                        <td id="info-scan-id">{{ job.scan_id|default:"—" }}</td>
+                    </tr>
+                    <tr>
+                        <td class="text-secondary">Device</td>
+                        <td id="info-device">{{ job.device|default:"—" }}</td>
+                    </tr>
+                    <tr>
+                        <td class="text-secondary">Matrix</td>
+                        <td id="info-geometry">{{ job.geometry_display }}</td>
+                    </tr>
+                    <tr>
+                        <td class="text-secondary">Spacing</td>
+                        <td id="info-spacing">{{ job.spacing_display }}</td>
+                    </tr>
+                    <tr>
+                        <td class="text-secondary">L/R Fix</td>
+                        <td>
+                            {% if job.fix_left_right %}
+                            <span class="badge bg-success">ON</span>
+                            {% else %}
+                            <span class="badge bg-secondary">OFF</span>
+                            {% endif %}
+                        </td>
+                    </tr>
+                </table>
+            </div>
+        </div>
+
+        <!-- Integrity Card -->
+        <div class="card mb-4 {% if job.status != 'completed' %}d-none{% endif %}" id="integrity-card">
+            <div class="card-header">
+                <h6 class="mb-0"><i class="bi bi-shield-check me-2"></i>Data Integrity</h6>
+            </div>
+            <div class="card-body">
+                <table class="table table-sm table-borderless mb-0">
+                    <tr>
+                        <td class="text-secondary">Source SHA-256</td>
+                        <td><code class="small" id="info-source-hash">{{ job.source_hash|truncatechars:16|default:"—" }}</code></td>
+                    </tr>
+                    <tr>
+                        <td class="text-secondary">Output SHA-256</td>
+                        <td><code class="small" id="info-output-hash">{{ job.output_hash|truncatechars:16|default:"—" }}</code></td>
+                    </tr>
+                </table>
+            </div>
+        </div>
+
+        <!-- Actions -->
+        <div class="card">
+            <div class="card-header">
+                <h6 class="mb-0"><i class="bi bi-gear me-1"></i>Actions</h6>
+            </div>
+            <div class="card-body">
+                <a href="{% url 'co_diagnostix_index' %}" class="btn btn-outline-info w-100 mb-2">
+                    <i class="bi bi-plus-lg me-1"></i>New Extraction
+                </a>
+                <form method="post" action="{% url 'delete_job' job.id %}" onsubmit="return confirm('Delete this job and all its output files?');">
+                    {% csrf_token %}
+                    <button type="submit" class="btn btn-outline-danger w-100">
+                        <i class="bi bi-trash me-1"></i>Delete Job
+                    </button>
+                </form>
+            </div>
+        </div>
+    </div>
+</div>
+
+{% if not job.is_complete %}
+<script>
+const JOB_ID = '{{ job.id }}';
+const STATUS_URL = '{% url "job_status_api" job.id %}';
+const VIEWER_URL = '{% url "dicom_viewer" "co-diagnostix" job.id %}';
+</script>
+{% endif %}
+{% endblock %}
+
+{% block extra_js %}
+{% if not job.is_complete %}
+<script>
+document.addEventListener('DOMContentLoaded', function() {
+    if (typeof JOB_ID !== 'undefined') {
+        pollJobStatus(STATUS_URL);
+    }
+});
+</script>
+{% endif %}
+{% endblock %}

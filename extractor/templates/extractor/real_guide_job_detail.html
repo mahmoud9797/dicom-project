@@ -1,0 +1,76 @@
+{% extends 'extractor/base.html' %}
+{% block title %}Real Guide Job{% endblock %}
+{% block content %}
+<h2 class="mb-4">RealGUIDE Extraction Job</h2>
+<div class="row">
+    <div class="col-lg-8">
+        <div class="card mb-4">
+            <div class="card-header d-flex justify-content-between align-items-center">
+                <h5 class="mb-0">Status</h5>
+                <span class="badge bg-secondary" id="status-badge">{{ job.status|upper }}</span>
+            </div>
+            <div class="card-body">
+                <div class="mb-3 d-flex justify-content-between">
+                    <span id="status-message">{{ job.status_message }}</span>
+                    <span id="progress-text">{{ job.progress_percent|floatformat:0 }}%</span>
+                </div>
+                <div class="progress" style="height: 24px;">
+                    <div class="progress-bar progress-bar-striped bg-info" style="width: {{ job.progress_percent }}%;" id="progress-bar"></div>
+                </div>
+            </div>
+        </div>
+        <div class="card mb-4 d-none" id="downloads-card">
+            <div class="card-header"><h5 class="mb-0">Downloads</h5></div>
+            <div class="card-body row g-3">
+                <div class="col-md-6"><a href="{% url 'rg_download_zip' job.id %}" class="btn btn-info w-100">Download ZIP</a></div>
+                <div class="col-md-6"><a href="{% url 'rg_download_report' job.id %}" class="btn btn-outline-info w-100">Validation Report</a></div>
+            </div>
+        </div>
+        <div class="card mb-4">
+            <div class="card-header"><h5 class="mb-0">Log</h5></div>
+            <div class="card-body p-0"><pre class="log-output mb-0 p-3" id="log-output">{{ job.log }}</pre></div>
+        </div>
+    </div>
+    <div class="col-lg-4">
+        <div class="card mb-4">
+            <div class="card-header"><h6 class="mb-0">Scan Information</h6></div>
+            <div class="card-body">
+                <table class="table table-sm table-borderless">
+                    <tr><td class="text-secondary">Patient</td><td id="info-patient-name">{{ job.patient_name|default:'—' }}</td></tr>
+                    <tr><td class="text-secondary">Patient ID</td><td>{{ job.entered_patient_id|default:'—' }}</td></tr>
+                    <tr><td class="text-secondary">Matrix</td><td id="info-geometry">{{ job.geometry_display }}</td></tr>
+                    <tr><td class="text-secondary">Spacing</td><td id="info-spacing">{{ job.spacing_display }}</td></tr>
+                </table>
+            </div>
+        </div>
+    </div>
+</div>
+{% if not job.is_complete %}
+<script>
+    const timer = setInterval(() => {
+        fetch("{% url 'real_guide_status_api' job.id %}")
+        .then(r => r.json())
+        .then(d => {
+            document.getElementById('progress-bar').style.width = d.progress + '%';
+            document.getElementById('progress-text').textContent = Math.round(d.progress) + '%';
+            document.getElementById('status-message').textContent = d.message;
+            document.getElementById('status-badge').textContent = d.status.toUpperCase();
+            document.getElementById('log-output').textContent = d.log;
+            if (d.status === 'completed') {
+                clearInterval(timer);
+                window.location.assign('{% url "dicom_viewer" "real-guide" job.id %}');
+                return;
+            }
+            if (d.is_complete) clearInterval(timer);
+            if (d.geometry) document.getElementById('info-geometry').textContent = d.geometry;
+            if (d.spacing) document.getElementById('info-spacing').textContent = d.spacing;
+            document.getElementById('info-patient-name').textContent = d.patient_name || '—';
+        });
+    }, 1500);
+</script>
+{% else %}
+{% if job.status == 'completed' %}
+<script>document.getElementById('downloads-card').classList.remove('d-none');</script>
+{% endif %}
+{% endif %}
+{% endblock %}

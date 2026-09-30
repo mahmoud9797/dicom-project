@@ -1,0 +1,31 @@
+{% extends 'extractor/base.html' %}
+{% block title %}Viewer{% endblock %}
+{% block nav_viewer %}active{% endblock %}
+
+{% block content %}
+<div class="d-flex flex-wrap align-items-center justify-content-between gap-3 mb-4">
+    <div>
+        <h1 class="h3 mb-1">DICOM viewer</h1>
+        <p class="text-secondary mb-0">Open a completed scan in axial, coronal, or sagittal view.</p>
+    </div>
+    <a href="{% url 'index' %}" class="btn btn-outline-info">New extraction</a>
+</div>
+{% if scans %}
+<div class="card"><div class="table-responsive"><table class="table table-hover mb-0">
+    <thead><tr><th>Patient ID</th><th>Patient name</th><th>Extractor</th><th>Created</th><th></th></tr></thead>
+    <tbody>
+    {% for job, kind, label in scans %}
+    <tr>
+        <td>{{ job.entered_patient_id|default:'—' }}</td>
+        <td>{{ job.patient_name|default:'—' }}</td>
+        <td>{{ label }}</td>
+        <td>{{ job.created_at|date:'Y-m-d H:i' }}</td>
+        <td><a class="btn btn-sm btn-outline-info" href="{% url 'dicom_viewer' kind job.id %}">Open viewer</a></td>
+    </tr>
+    {% endfor %}
+    </tbody>
+</table></div></div>
+{% else %}
+<div class="card"><div class="card-body text-center text-secondary py-5">No completed scans yet.</div></div>
+{% endif %}
+{% endblock %}

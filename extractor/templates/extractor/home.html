@@ -1,0 +1,46 @@
+{% extends 'extractor/base.html' %}
+{% block title %}Choose an extractor{% endblock %}
+{% block nav_home %}active{% endblock %}
+
+{% block content %}
+<section class="text-center mb-5">
+    <span class="text-info text-uppercase small fw-bold">DicomExtractor Pro</span>
+    <h1 class="display-6 mt-2">Choose an extraction type</h1>
+</section>
+<div class="row g-4 extractor-grid">
+    <div class="col-md-4">
+        <a class="card extractor-choice h-100 text-decoration-none" href="{% url 'co_diagnostix_index' %}">
+            <div class="card-body p-4 d-flex flex-column">
+                <i class="bi bi-box text-info fs-1 mb-3"></i>
+                <h2 class="h4 text-light">coDiagnostiX</h2>
+                <p class="text-secondary flex-grow-1">Extract a classic DICOM series from a patient database and its matching cache file.</p>
+                <p class="small text-info mb-3">.cdxPatient + .cache</p>
+                <span class="btn btn-outline-info">Open extractor <i class="bi bi-arrow-right ms-1"></i></span>
+            </div>
+        </a>
+    </div>
+    <div class="col-md-4">
+        <a class="card extractor-choice h-100 text-decoration-none" href="{% url 'real_guide_index' %}">
+            <div class="card-body p-4 d-flex flex-column">
+                <i class="bi bi-file-zip text-info fs-1 mb-3"></i>
+                <h2 class="h4 text-light">RealGUIDE</h2>
+                <p class="text-secondary flex-grow-1">Recover a supported RealGUIDE raw project from its ZIP archive.</p>
+                <p class="small text-info mb-3">.zip project archive</p>
+                <span class="btn btn-outline-info">Open extractor <i class="bi bi-arrow-right ms-1"></i></span>
+            </div>
+        </a>
+    </div>
+    <div class="col-md-4">
+        <a class="card extractor-choice h-100 text-decoration-none" href="{% url 'future_case_index' %}">
+            <div class="card-body p-4 d-flex flex-column">
+                <i class="bi bi-layers text-info fs-1 mb-3"></i>
+                <h2 class="h4 text-light">Future Case</h2>
+                <p class="text-secondary flex-grow-1">Recover a Future/Anatomage INV volume and export DICOM and NIfTI results.</p>
+                <p class="small text-info mb-3">.inv / .exe / .zip</p>
+                <span class="btn btn-outline-info">Open extractor <i class="bi bi-arrow-right ms-1"></i></span>
+            </div>
+        </a>
+    </div>
+</div>
+<div class="text-center mt-5"><a href="{% url 'job_list' %}" class="btn btn-outline-secondary">View all extraction jobs</a></div>
+{% endblock %}

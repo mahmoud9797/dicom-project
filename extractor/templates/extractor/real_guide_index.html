@@ -1,0 +1,57 @@
+{% extends 'extractor/base.html' %}
+{% block title %}Real Guide Extractor{% endblock %}
+{% block nav_real_guide %}active{% endblock %}
+{% block content %}
+<div class="row">
+    <div class="col-lg-8">
+        <div class="card bg-gradient-primary mb-4 border-info">
+            <div class="card-body p-4">
+                <h1 class="h3 mb-2"><i class="bi bi-lungs-fill text-info me-2"></i>RealGUIDE Raw-Project Extractor</h1>
+                <p class="text-secondary mb-0">Rebuild RealGUIDE 5.4.2 raw-project CBCT cache as classic multi-slice DICOM series.</p>
+            </div>
+        </div>
+        <div class="card mb-4">
+            <div class="card-header"><h5 class="mb-0"><i class="bi bi-cloud-arrow-up me-2"></i>New Extraction</h5></div>
+            <div class="card-body">
+                <form method="post" enctype="multipart/form-data">
+                    {% csrf_token %}
+                    <div class="mb-3">
+                        <label for="{{ form.entered_patient_id.id_for_label }}" class="form-label">Patient ID</label>
+                        {{ form.entered_patient_id }}
+                        <div class="form-text">Required for this extraction and written to the DICOM Patient ID tag. The patient name is read from the extracted DICOM after processing.</div>
+                        <div class="text-danger small">{{ form.entered_patient_id.errors }}</div>
+                    </div>
+                    <div class="mb-3">
+                        <label class="form-label">Project ZIP</label>
+                        {{ form.project_zip }}
+                        <div class="text-danger small">{{ form.project_zip.errors }}</div>
+                    </div>
+                    <div class="mb-3 form-check">
+                        {{ form.allow_assumed_orientation }}
+                        <label class="form-check-label">{{ form.allow_assumed_orientation.label }}</label>
+                        <div class="text-danger small">{{ form.allow_assumed_orientation.errors }}</div>
+                    </div>
+                    <button type="submit" class="btn btn-info btn-lg w-100"><i class="bi bi-play-fill me-2"></i>Start</button>
+                </form>
+            </div>
+        </div>
+    </div>
+    <div class="col-lg-4">
+        <div class="card">
+            <div class="card-header"><h6 class="mb-0">Recent Jobs</h6></div>
+            <div class="card-body p-0">
+                <div class="list-group list-group-flush">
+                    {% for job in recent_jobs %}
+                    <a href="{% url 'real_guide_job_detail' job.id %}" class="list-group-item list-group-item-action">
+                        <div class="d-flex justify-content-between align-items-center">
+                            <span><span class="badge bg-secondary me-2">{{ job.status }}</span>{{ job.entered_patient_id|default:'—' }} · {{ job.patient_name|default:'—' }}</span>
+                            <small class="text-secondary">{{ job.created_at|timesince }} ago</small>
+                        </div>
+                    </a>
+                    {% endfor %}
+                </div>
+            </div>
+        </div>
+    </div>
+</div>
+{% endblock %}
